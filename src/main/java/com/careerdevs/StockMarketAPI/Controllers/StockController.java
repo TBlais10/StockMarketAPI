@@ -7,6 +7,7 @@ import com.careerdevs.StockMarketAPI.Models.CompMarketCap;
 import com.careerdevs.StockMarketAPI.Utility.StockCSVParcer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,50 +22,53 @@ public class StockController {
     @Autowired
     Environment env;
 
-    final public String URL = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=" + env.getProperty("api.key");
+    HttpHeaders header = new HttpHeaders();
 
-    @GetMapping("/getall")
+    final public String URL = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=";
+
+    @GetMapping("/getall") //INTERNAL
     public List<CompAV> getAll(RestTemplate restTemplate) {
         List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
         List<CompAV> allCompData = new ArrayList<>();
 
         for (CompCSV compData : tempCsvData) {
             System.out.println(compData.getSymbol());
-            CompAV compAllData = restTemplate.getForObject(URL, CompAV.class);
+            CompAV compAllData = restTemplate.getForObject(URL + env.getProperty("api.key"), CompAV.class);
             allCompData.add(compAllData);
         }
 
         return allCompData;
     }
 
-    @GetMapping("/ipodata") //Gets company names and IPO data(in ascending order) //TODO: FINISH
+    @GetMapping("/ipodata") //Gets company names and IPO data(in ascending order). INTERNAL //TODO: FINISH
     public List<CompCSV> companyIpoData(RestTemplate restTemplate) {
         List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
 
         return tempCsvData;
     }
 
-    @GetMapping("/nasdaq") //companies that traded on NASDAQ //TODO: TEST
-    public List<CompAV> nasdaqComps(RestTemplate restTemplate) {
+    @GetMapping("/nasdaq") //companies that traded on NASDAQ. INTERNAL //TODO: still needs work
+    public List<CompCSV> nasdaqComps(RestTemplate restTemplate) {
         List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
-        List<CompAV> filteredComps = new ArrayList<>();
 
         for (CompCSV compData : tempCsvData) {
-            CompAV compAllData = restTemplate.getForObject(URL, CompAV.class);
-            if (compData.getExchange().equalsIgnoreCase("nasda")) {
-                filteredComps.add(compAllData);
+
+            if (!compData.getExchange().equalsIgnoreCase("nasda")) {
+                tempCsvData.remove(compData);
+            } else {
+                System.out.println(compData.getSymbol());
             }
         }
-        return filteredComps;
+        return tempCsvData;
     }
 
-    @GetMapping("/nyse")//companies that traded on NYSE //TODO:TEST
+    @GetMapping("/nyse")//companies that traded on NYSE. INTERNAL //TODO:TEST
     public List<CompAV> nyseComps(RestTemplate restTemplate) {
         List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
         List<CompAV> filteredComps = new ArrayList<>();
 
         for (CompCSV compData : tempCsvData) {
-                CompAV compAllData = restTemplate.getForObject(URL,CompAV.class);
+                CompAV compAllData = restTemplate.getForObject(URL + env.getProperty("api.key"),CompAV.class);
             if (compData.getExchange().equalsIgnoreCase("nyse")) {
                 filteredComps.add(compAllData);
             }
@@ -72,7 +76,7 @@ public class StockController {
         return filteredComps;
     }
 
-    @GetMapping("/overviewinfo")
+    @GetMapping("/overviewinfo") //EXTERNAL
     public CompAV overview(RestTemplate restTemplate) {
         String overviewURL = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=" + env.getProperty("api.key");
         try {
@@ -83,7 +87,7 @@ public class StockController {
         }
     }
 
-    @GetMapping ("/marketcap")//Companies name, symbol, and market cap (high to low) //TODO: FINISH
+    @GetMapping ("/marketcap")//Companies name, symbol, and market cap (high to low) EXTERNAL//TODO: FINISH
     public List<CompMarketCap> highLowMarketCap(RestTemplate restTemplate){
         List<CompMarketCap> comps = new ArrayList<>();
 
@@ -91,7 +95,7 @@ public class StockController {
         return comps;
     }
 
-    @GetMapping("/divdates") //Company names, symbol and dividend date. Order by date closest to current date. //TODO: FINISH
+    @GetMapping("/divdates") //Company names, symbol and dividend date. Order by date closest to current date. EXTERNAL //TODO: FINISH
     public List<CompDivDate> divDates (RestTemplate restTemplate){
         List<CompDivDate> comps = new ArrayList<>();
 
