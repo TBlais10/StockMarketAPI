@@ -15,10 +15,10 @@ public class StockCSVParcer {
         System.out.println(System.getProperty("user.dir"));
         System.out.println(readCSV());
     }
-    public static List<CompCSV> readCSV() {
+    public static ArrayList<CompCSV> readCSV() {
         try {
             CSVReader reader = new CSVReader(new FileReader("CsvResources/data_set1.csv"), ',');
-            List<CompCSV> allCompanies = new ArrayList<CompCSV>();
+            ArrayList<CompCSV> allCompanies = new ArrayList<>();
             // read line by line
             String[] record = null;
             while ((record = reader.readNext()) != null) {

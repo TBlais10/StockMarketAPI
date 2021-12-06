@@ -6,16 +6,13 @@ import com.careerdevs.StockMarketAPI.Utility.StockCSVParcer;
 import com.careerdevs.StockMarketAPI.Utility.StockComparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/stocks")
@@ -27,10 +24,10 @@ public class StockController {
         return "https://www.alphavantage.co/query?function=OVERVIEW&symbol=" + symbol + "&=apikey=" + env.getProperty("api.key");
     }
 
-    @GetMapping("/getall") //INTERNAL
-    public List<CompAV> getAll(RestTemplate restTemplate) {
-        List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
-        List<CompAV> allCompData = new ArrayList<>();
+    @GetMapping("/getall") //Symbols and Name by Name INTERNAL //TODO: SORT BY NAME
+    public ArrayList<CompAV> getAll(RestTemplate restTemplate) {
+        ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
+        ArrayList<CompAV> allCompData = new ArrayList<>();
 
         for (CompCSV compData : tempCsvData) {
             System.out.println(compData.getSymbol());
@@ -38,48 +35,54 @@ public class StockController {
             allCompData.add(compAllData);
         }
 
+        Collections.sort(allCompData);
+
         return allCompData;
     }
 
     @GetMapping("/ipodata") //Gets company names and IPO data(in ascending order). INTERNAL //TODO: FINISH
-    public List<CompCSV> companyIpoData(RestTemplate restTemplate) {
-        List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
+    public ArrayList<CompCSV> companyIpoData(RestTemplate restTemplate) {
+        ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
 
         return tempCsvData;
     }
 
-    @GetMapping("/nasdaq") //companies that traded on NASDAQ. INTERNAL
-    public List<CompCSV> nasdaqComps(RestTemplate restTemplate) {
-        List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
-        List<CompCSV> sortedComps = new ArrayList<>();
+    @GetMapping("/{stock}") //companies that traded on NASDAQ. INTERNAL
+    public ArrayList<CompCSV> nasdaqComps(RestTemplate restTemplate, @RequestParam String stock) {
+        ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
+        ArrayList<CompCSV> sortedComps = new ArrayList<>();
 
-        for (CompCSV compData : tempCsvData) {
-
-            if (compData.getExchange().equalsIgnoreCase("nasdaq")) {
-                sortedComps.add(compData);
+        try {
+            for (CompCSV compData : tempCsvData) {
+                if (compData.getExchange().equalsIgnoreCase(stock)) {
+                    sortedComps.add(compData);
+                }
             }
+            return sortedComps;
+        } catch (Exception e){
+            e.getMessage();
+            return null;
         }
-        return sortedComps;
     }
 
-    @GetMapping("/nyse")//companies that traded on NYSE. INTERNAL
-    public List<CompCSV> nyseComps(RestTemplate restTemplate) {
-        List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
-        List<CompCSV> sortedComps = new ArrayList<>();
-
-        for (CompCSV compData : tempCsvData) {
-
-            if (compData.getExchange().equalsIgnoreCase("nyse")) {
-                sortedComps.add(compData);
-            }
-        }
-        return sortedComps;
-    }
+//    @GetMapping("/nyse")//companies that traded on NYSE. INTERNAL
+//    public List<CompCSV> nyseComps(RestTemplate restTemplate) {
+//        List<CompCSV> tempCsvData = StockCSVParcer.readCSV();
+//        List<CompCSV> sortedComps = new ArrayList<>();
+//
+//        for (CompCSV compData : tempCsvData) {
+//
+//            if (compData.getExchange().equalsIgnoreCase("nyse")) {
+//                sortedComps.add(compData);
+//            }
+//        }
+//        return sortedComps;
+//    }
 
     @GetMapping("/overviewinfo") //EXTERNAL
-    public List<CompAV> overview(RestTemplate restTemplate) {
-        List<CompCSV> tempData = StockCSVParcer.readCSV();
-        List<CompAV> compOverview = new ArrayList<>();
+    public ArrayList<CompAV> overview(RestTemplate restTemplate) {
+        ArrayList<CompCSV> tempData = StockCSVParcer.readCSV();
+        ArrayList<CompAV> compOverview = new ArrayList<>();
 
         try {
         for (CompCSV compData : tempData){
@@ -94,9 +97,9 @@ public class StockController {
     }
 
     @GetMapping ("/marketcap")//Companies name, symbol, and market cap (high to low) EXTERNAL//TODO: STILL NEEDS WORK
-    public List<CompAV> highLowMarketCap(RestTemplate restTemplate){
-        List<CompCSV> tempData = StockCSVParcer.readCSV();
-        List<CompAV> comps = new ArrayList<>();
+    public ArrayList<CompAV> highLowMarketCap(RestTemplate restTemplate){
+        ArrayList<CompCSV> tempData = StockCSVParcer.readCSV();
+        ArrayList<CompAV> comps = new ArrayList<>();
 
         for (CompCSV compData : tempData){
             CompAV apiComps = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
@@ -111,9 +114,9 @@ public class StockController {
     }
 
     @GetMapping("/divdates") //Company names, symbol and dividend date. Order by date closest to current date. EXTERNAL //TODO: FINISH
-    public List<CompAV> divDates (RestTemplate restTemplate){
-        List<CompCSV> tempCompArr = StockCSVParcer.readCSV();
-        List<CompAV> comps = new ArrayList<>();
+    public ArrayList<CompAV> divDates (RestTemplate restTemplate){
+        ArrayList<CompCSV> tempCompArr = StockCSVParcer.readCSV();
+        ArrayList<CompAV> comps = new ArrayList<>();
 
         for (CompCSV compData : tempCompArr){
             CompAV apiComps = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);

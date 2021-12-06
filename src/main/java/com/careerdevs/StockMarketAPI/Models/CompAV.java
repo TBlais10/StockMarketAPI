@@ -14,11 +14,17 @@ public class CompAV implements Comparable<CompAV> {
     private String MarketCapitalization;
 
 
-//    public CompAV(String symbol, String name, String marketCapitalization) {
-//        this.symbol = symbol;
-//        this.name = name;
-//        MarketCapitalization = marketCapitalization;
-//    }
+    public CompAV() {
+    }
+
+
+    public CompAV(String symbol, String name, String marketCapitalization) {
+        this.symbol = symbol;
+        this.name = name;
+        MarketCapitalization = marketCapitalization;
+    }
+
+
 
     public String getSymbol() {
         return symbol;
@@ -87,6 +93,6 @@ public class CompAV implements Comparable<CompAV> {
 
     @Override
     public int compareTo(CompAV otherComp) {
-        return Integer.parseInt(getMarketCapitalization())  - Integer.parseInt(otherComp.getMarketCapitalization());
+        return Integer.parseInt(this.getMarketCapitalization())  - Integer.parseInt(otherComp.getMarketCapitalization());
     }
 }

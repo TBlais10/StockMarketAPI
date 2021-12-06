@@ -11,6 +11,21 @@ public class CompCSV implements Comparable<CompCSV>{
     private String delistingDate;
     private String status;
 
+    public CompCSV() {
+    }
+
+    public CompCSV(String symbol, String name, String ipoDate, String status) {
+        this.symbol = symbol;
+        this.name = name;
+        this.ipoDate = ipoDate;
+        this.status = status;
+    }
+
+    public CompCSV(String symbol, String name) {
+        this.symbol = symbol;
+        this.name = name;
+    }
+
     public String getSymbol() {
         return symbol;
     }
