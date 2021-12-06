@@ -2,9 +2,7 @@ package com.careerdevs.StockMarketAPI.Models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class CompCSV {
-
-
+public class CompCSV implements Comparable<CompCSV>{
     private String symbol;
     private String name;
     private String exchange;
@@ -74,4 +72,8 @@ public class CompCSV {
         return "{" + name + "::" + symbol + "::" + ipoDate + "::" + status + "}";
     }
 
+    @Override
+    public int compareTo(CompCSV otherComp) {
+        return 0;
+    }
 }
