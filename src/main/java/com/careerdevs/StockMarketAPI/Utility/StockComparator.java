@@ -1,6 +1,7 @@
 package com.careerdevs.StockMarketAPI.Utility;
 
 import com.careerdevs.StockMarketAPI.Models.CompAV;
+import com.careerdevs.StockMarketAPI.Models.CompCSV;
 
 import java.util.Comparator;
 
@@ -8,6 +9,12 @@ public class StockComparator {
 
     public static class sortByDate {
 
+    }
+
+    public static class sortByName implements Comparator<CompCSV> {
+        public int compare(CompCSV a, CompCSV b){
+            return a.getName().compareTo(b.getName());
+        }
     }
 
 

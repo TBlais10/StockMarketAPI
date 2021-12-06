@@ -3,6 +3,8 @@ package com.careerdevs.StockMarketAPI.Models;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CompAV implements Comparable<CompAV> {
     private String symbol;
@@ -12,19 +14,7 @@ public class CompAV implements Comparable<CompAV> {
     private String description;
     private String address;
     private String MarketCapitalization;
-
-
-    public CompAV() {
-    }
-
-
-    public CompAV(String symbol, String name, String marketCapitalization) {
-        this.symbol = symbol;
-        this.name = name;
-        MarketCapitalization = marketCapitalization;
-    }
-
-
+    private String DividenedDate;
 
     public String getSymbol() {
         return symbol;
@@ -90,6 +80,14 @@ public class CompAV implements Comparable<CompAV> {
         MarketCapitalization = marketCapitalization;
     }
 
+    public String getDividenedDate() {
+        return DividenedDate;
+    }
+
+    @JsonProperty("Div Date")
+    public void setDividenedDate(String dividenedDate) {
+        DividenedDate = dividenedDate;
+    }
 
     @Override
     public int compareTo(CompAV otherComp) {
