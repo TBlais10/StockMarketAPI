@@ -1,20 +1,21 @@
 package com.careerdevs.StockMarketAPI.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CompAV implements Comparable<CompAV> {
+public class CompAV {
     private String symbol;
     private String assetType;
     private String name;
     private String Exchange;
     private String description;
     private String address;
-    private String MarketCapitalization;
-    private String DividenedDate;
+    private String MarketCap;
+    private String DividendDate;
+    @JsonIgnore
+    private int daysUntil;
 
     public String getSymbol() {
         return symbol;
@@ -68,29 +69,32 @@ public class CompAV implements Comparable<CompAV> {
 
     @JsonProperty("Exchange")
     public void setExchange(String exchange) {
-        Exchange = exchange;
+        this.Exchange = exchange;
     }
 
-    public String getMarketCapitalization() {
-        return MarketCapitalization;
+    public String getMarketCap() {
+        return MarketCap;
     }
 
-    @JsonProperty("Market Cap")
-    public void setMarketCapitalization(String marketCapitalization) {
-        MarketCapitalization = marketCapitalization;
+    @JsonProperty("MarketCapitalization")
+    public void setMarketCap(String marketCap) {
+        this.MarketCap = marketCap;
     }
 
-    public String getDividenedDate() {
-        return DividenedDate;
+    public String getDividendDate() {
+        return DividendDate;
     }
 
-    @JsonProperty("Div Date")
-    public void setDividenedDate(String dividenedDate) {
-        DividenedDate = dividenedDate;
+    @JsonProperty("DividendDate")
+    public void setDividendDate(String dividendDate) {
+        DividendDate = dividendDate;
     }
 
-    @Override
-    public int compareTo(CompAV otherComp) {
-        return Integer.parseInt(this.getMarketCapitalization())  - Integer.parseInt(otherComp.getMarketCapitalization());
+    public int getDaysUntil() {
+        return daysUntil;
+    }
+
+    public void setDaysUntil(int daysUntil) {
+        this.daysUntil = daysUntil;
     }
 }

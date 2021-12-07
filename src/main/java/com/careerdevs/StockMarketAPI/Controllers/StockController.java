@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,11 +25,13 @@ public class StockController {
     @Autowired
     Environment env;
 
-    private String getURL(String symbol)/*Simplifies the process of getting symbol and adding the api key to the URL*/{
+    private String getURL(String symbol)/*Simplifies the process of getting symbol and adding the api key to the URL*/ {
         return "https://www.alphavantage.co/query?function=OVERVIEW&symbol=" + symbol + "&=apikey=" + env.getProperty("api.key");
     }
 
-    @GetMapping("/getall") //Symbols and Name by Name INTERNAL //TODO: TEST
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-mm-dd");
+
+    @GetMapping("/feature1") //Symbols and Name sort by Name INTERNAL
     public ArrayList<CompCSV> getAll(RestTemplate restTemplate) {
         ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
 
@@ -34,8 +39,8 @@ public class StockController {
         tempCsvData.sort(Comparator.comparing(CompCSV::getName));
 
         ArrayList<CompCSV> sortedData = new ArrayList<>();
-        for (CompCSV compData : tempCsvData){
-            CompCSV tempData = DataConverter.convertGetAll(compData);
+        for (CompCSV compData : tempCsvData) {
+            CompCSV tempData = DataConverter.convertFeature1(compData);
 
             sortedData.add(tempData);
         }
@@ -43,24 +48,24 @@ public class StockController {
         return sortedData;
     }
 
-    @GetMapping("/ipodata") //Gets company names and IPO data(in ascending order). INTERNAL //TODO: TEST
-    public ArrayList<CompCSV> companyIpoData(RestTemplate restTemplate) {
+    @GetMapping("/feature2") //Gets company names and IPO data(in ascending order). INTERNAL
+    public ArrayList<CompCSV> companyIpoData(RestTemplate restTemplate) throws ParseException {
         ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
 
-        ArrayList<CompCSV> sortedData = new ArrayList<>();
-        for (CompCSV compData : tempCsvData){
-            CompCSV tempComp = new CompCSV();
-            tempComp.setName(compData.getName());
-            tempComp.setSymbol(compData.getSymbol());
-            tempComp.setIpoDate(compData.getIpoDate());
+        assert tempCsvData != null;
+        tempCsvData.sort(Comparator.comparing(CompCSV :: getIpoDate));
 
-            sortedData.add(tempComp);
+        ArrayList<CompCSV> sortedData = new ArrayList<>();
+        for (CompCSV compData : tempCsvData) {
+            CompCSV tempData = DataConverter.convertFeature2(compData);
+
+            sortedData.add(tempData);
         }
 
-        return tempCsvData;
+        return sortedData;
     }
 
-    @GetMapping("/{stock}") //companies that traded on NASDAQ. INTERNAL
+    @GetMapping("/feature3/{stock}") //companies that traded on NASDAQ. INTERNAL //TEST
     public ArrayList<CompCSV> nasdaqComps(RestTemplate restTemplate, @RequestParam String stock) {
         ArrayList<CompCSV> tempCsvData = StockCSVParcer.readCSV();
         ArrayList<CompCSV> sortedComps = new ArrayList<>();
@@ -72,7 +77,7 @@ public class StockController {
                 }
             }
             return sortedComps;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.getMessage();
             return null;
         }
@@ -92,21 +97,21 @@ public class StockController {
 //        return sortedComps;
 //    }
 
-    @GetMapping("/overviewinfo") //EXTERNAL //TODO: TEST
+    @GetMapping("/feature5") //Include Symbol, AssetType, Name, Description, and AddressEXTERNAL
     public ArrayList<CompAV> overview(RestTemplate restTemplate) {
         ArrayList<CompCSV> tempData = StockCSVParcer.readCSV();
         ArrayList<CompAV> compOverview = new ArrayList<>();
 
         try {
-        for (CompCSV compData : tempData){
-        CompAV comp = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
+            for (CompCSV compData : tempData) {
+                CompAV comp = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
 
-        assert comp != null;
+                assert comp != null;
 
-        CompAV trimmedData = DataConverter.convertOverview(comp);
-        compOverview.add(trimmedData);
+                CompAV trimmedData = DataConverter.convertFeature5(comp);
+                compOverview.add(trimmedData);
 
-        }
+            }
             return compOverview;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -114,32 +119,39 @@ public class StockController {
         }
     }
 
-    @GetMapping ("/marketcap")//Companies name, symbol, and market cap (high to low) EXTERNAL//TODO: STILL NEEDS WORK
-    public ArrayList<CompAV> highLowMarketCap(RestTemplate restTemplate){
+    @GetMapping("/feature6")//Companies name, symbol, and market cap (high to low) EXTERNAL//TODO: STILL NEEDS WORK
+    public ArrayList<CompAV> highLowMarketCap(RestTemplate restTemplate) {
         ArrayList<CompCSV> tempData = StockCSVParcer.readCSV();
         ArrayList<CompAV> comps = new ArrayList<>();
 
-        for (CompCSV compData : tempData){
-            CompAV apiComps = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
-            comps.add(apiComps);
-        }
 
-        Collections.sort(comps);
-        Collections.reverse(comps);
-        System.out.println(comps);
+        for (CompCSV compData : tempData) {
+            CompAV apiComps = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
+            CompAV trimmedData = DataConverter.convertFeature6(apiComps);
+            comps.add(trimmedData);
+        }
+        assert comps != null;
+        comps.sort(new StockComparator.sortMarketCap());
 
         return comps;
     }
 
-    @GetMapping("/divdates") //Company names, symbol and dividend date. Order by date closest to current date. EXTERNAL //TODO: FINISH
-    public ArrayList<CompAV> divDates (RestTemplate restTemplate){
+    @GetMapping("/feature7")
+    //Company names, symbol and dividend date. Order by date closest to current date. EXTERNAL //TODO: FINISH
+    public ArrayList<CompAV> divDates(RestTemplate restTemplate) {
         ArrayList<CompCSV> tempCompArr = StockCSVParcer.readCSV();
         ArrayList<CompAV> comps = new ArrayList<>();
 
-        for (CompCSV compData : tempCompArr){
+        for (CompCSV compData : tempCompArr) {
             CompAV apiComps = restTemplate.getForObject(getURL(compData.getSymbol()), CompAV.class);
-            comps.add(apiComps);
+            assert apiComps != null;
+
+            CompAV trimmedData = DataConverter.convertFeature7(apiComps);
+            comps.add(trimmedData);
         }
+
+        comps.sort(new StockComparator.sortByDivDate());
+        Collections.reverse(comps);
 
         return comps;
     }
